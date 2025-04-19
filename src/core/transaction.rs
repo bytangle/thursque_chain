@@ -4,13 +4,13 @@ use crate::utils::serializable::Serializable;
 
 #[derive(Debug)]
 pub struct Transaction {
-  sender_address: Vec<u8>,
-  recipient_address: Vec<u8>,
-  value: u64,
+  pub sender_address: Vec<u8>,
+  pub recipient_address: Vec<u8>,
+  pub value: i64,
 }
 
 impl Transaction {
-  pub fn new(sender_address: Vec<u8>, recipient_address: Vec<u8>, value: u64) -> Self {
+  pub fn new(sender_address: Vec<u8>, recipient_address: Vec<u8>, value: i64) -> Self {
     Self { sender_address, recipient_address, value }
   }
 }
@@ -57,7 +57,7 @@ impl Serializable <Transaction> for Transaction {
     let value_len = usize::from_be_bytes(bytes[pos..pos + 8].try_into().unwrap());
 
     pos += 8;
-    let value = u64::from_be_bytes(bytes[pos..pos + value_len].try_into().unwrap());
+    let value = i64::from_be_bytes(bytes[pos..pos + value_len].try_into().unwrap());
 
     Transaction { sender_address, recipient_address, value }
   }

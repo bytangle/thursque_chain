@@ -13,18 +13,24 @@ pub struct Blockchain {
 
 impl Blockchain {
   const DIFFICULTY: usize = 4;
-  const MINING_SENDER: &str = "THURSQUE";
-  const MINING_REWARD: u64 = 1;
+  const MINING_SENDER: &'static str = "0xEA31cD0D90fC35E7Af05ED42B779C3E3Aa45C0Dc";
+  const MINING_REWARD: i64 = 1;
 
-  pub fn new() -> Self {
+  pub fn new(address: String) -> Self {
     let mut blockchain = Self {
       transaction_pool: Vec::<Vec<u8>>::new(),
       chain: vec![],
+      address,
     };
 
-    blockchain.create_block(0, vec![0 as u8; 32]);
+    let genesis_block = Self::create_genesis_block();
+    blockchain.chain.push(genesis_block);
 
     blockchain
+  }
+
+  fn create_genesis_block() -> Block {
+    Block::new(0, vec![0 as u8; 32])
   }
 
   pub fn create_block(&mut self, nonce: u32, previous_hash: Vec<u8>) {
@@ -36,7 +42,7 @@ impl Blockchain {
 
     let start_time = Instant::now();
 
-    let block_hash = Self::mine_block(&mut block);
+    let block_hash = Self::do_proof_of_work(&mut block);
 
     let time_elapsed = start_time.elapsed();
 
@@ -150,7 +156,7 @@ impl Blockchain {
     self.transaction_pool.push(transaction.serialize());
   }
 
-  fn mine_block(block: &mut Block) -> String {
+  fn do_proof_of_work(block: &mut Block) -> String {
     loop {
       let block_hash = block.hash();
       let block_hash_as_hex = hex::encode(&block_hash);
@@ -161,6 +167,44 @@ impl Blockchain {
 
       *block += 1;
     }
+  }
+
+  pub fn mine(&mut self) -> bool {
+    let miner_reward_transaction = Transaction::new(
+      Self::MINING_SENDER.into(),
+      self.address.clone().into(), 
+      Self::MINING_REWARD
+    );
+
+    self.add_transaction(miner_reward_transaction);
+
+    self.create_block(0, self.last_block().unwrap().hash());
+
+    true
+  }
+
+  pub fn calculate_reward(&self, address: String) -> i64 {
+    let mut total_amount: i64 = 0;
+
+    for i in 0..self.chain.len() {
+      let block = &self[i];
+
+      for tx in block.transactions.iter() {
+        let deserialized_tx = Transaction::deserialize(tx.clone());
+
+        let tx_value = deserialized_tx.value;
+
+        if <String as Into<Vec<u8>>>::into(address.clone()) == deserialized_tx.recipient_address {
+          total_amount += tx_value;
+        }
+
+        if <String as Into<Vec<u8>>>::into(address.clone()) == deserialized_tx.sender_address {
+          total_amount -= tx_value;
+        }
+      }
+    }
+
+    total_amount
   }
 }
 

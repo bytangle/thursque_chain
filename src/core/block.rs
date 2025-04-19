@@ -1,6 +1,5 @@
 use std::{ops::AddAssign, time::SystemTime};
-
-use crate::utils::hash::hash;
+use crate::{core::transaction::Transaction, utils::{hash::hash, serializable::Serializable}};
 
 pub enum BlockSearch {
   SearchByIndex(usize),
@@ -42,6 +41,12 @@ impl Block {
 		println!("nonce: {}", self.nonce);
 		println!("previous_hash: {:?}", self.previous_hash);
 		println!("transactions: {:?}", self.transactions);
+
+    for (idx, tx) in self.transactions.iter().enumerate() {
+      let deserialized = Transaction::deserialize(tx.clone());
+
+      println!("the {}'th transaction is: {}", idx, deserialized);
+    }
 	}
 
   pub fn hash(&self) -> Vec<u8> {

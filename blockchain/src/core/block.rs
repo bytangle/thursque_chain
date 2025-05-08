@@ -1,5 +1,7 @@
 use std::{ops::AddAssign, time::SystemTime};
-use crate::{core::transaction::Transaction, utils::{hash::hash, serializable::Serializable}};
+use serde::{Deserialize, Serialize};
+
+use crate::{core::raw_transaction::RawTransaction, utils::{hash::hash, serializable::Serializable}};
 
 pub enum BlockSearch {
   SearchByIndex(usize),
@@ -21,7 +23,7 @@ pub enum BlockSearchResult <'a> {
   FailOfTransaction(Vec<u8>)
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Block {
   pub nonce: u32,
 	pub previous_hash: Vec<u8>,
@@ -43,7 +45,7 @@ impl Block {
 		println!("transactions: {:?}", self.transactions);
 
     for (idx, tx) in self.transactions.iter().enumerate() {
-      let deserialized = Transaction::deserialize(tx.clone());
+      let deserialized = RawTransaction::deserialize(tx.clone());
 
       println!("the {}'th transaction is: {}", idx, deserialized);
     }

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Wallet</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+    <script>
+      $(
+        function() {
+          $.ajax({
+            url: "/wallet_details",
+            method: "GET",
+            success: function(response) {
+              $("#public_key").val(response["public_key"]);
+              $("#private_key").val(response["private_key"]);
+              $("#blockchain_address").val(response["blockchain_address"]);
+            },
+            error: function(err) { console.error(err); }
+          });
+
+          $("#send_money").click(() => {
+            let confirm_text = "Are you ready to send the provided amount?";
+
+            let confirm_result = confirm(confirm_text);
+
+            switch (confirm_result) {
+              case true:
+                {
+                  let transaction = {
+                    private_key: $("#private_key").val(),
+                    public_key: $("#public_key").val(),
+                    blockchain_address: $("#blockchain_address").val(),
+                    recipient_address: $("#recipient_address").val(),
+                    amount: $("#amount").val(),
+                  };
+
+                  $.ajax({
+                    url: "/transact",
+                    method: "POST",
+                    data: JSON.stringify(transaction),
+                    contentType: 'application/json',
+                    success: (response) => {
+                      console.log('---- transaction req response ---- ', response);
+                    },
+                    error: (err) => { console.error(err); }
+                  })
+                }
+                break;
+              default:
+                alert("transaction cancelled");
+            }
+          });
+
+
+          function reload_amount() {
+            const address = $("#blockchain_address").val();
+
+            console.log('get amount for address: ', address);
+
+            const url = `/amount/${address}`;
+
+            console.log("query amount url: ", url);
+
+            $.ajax({
+              url,
+              type: "GET",
+              success: (response) => {
+                let amount = response["amount"];
+
+                $("#input_amount").text(amount);
+
+                console.log(amount);
+              },
+              error: (err) => {
+                console.error(err);
+              }
+            })
+          }
+
+          $("#refresh_button").click(() => {
+            reload_amount();
+          })
+        }
+      );
+    </script>
+  </head>
+
+  <body>
+    <section>
+      <h1>Wallet</h1>
+      <div id="input_amount">0</div>
+
+      <button id="refresh_button">Refresh wallet</button>
+
+      <p>Public Key</p>
+      <textarea id="public_key" row="2" cols="100"></textarea>
+
+      <p>Private Key</p>
+      <textarea id="private_key" row="1" cols="100"></textarea>
+
+      <p>Blockchain Address:</p>
+      <textarea id="blockchain_address" row="1" cols="100"></textarea>
+    </section>
+
+    <!-- send money -->
+    <section>
+      <h1>Send money</h1>
+      <section>
+        Address: <input id="recipient_address" size="100" type="text"/>
+        <br />
+        Amount: <input id="amount" type="text" />
+        <br />
+        <button id="send_money">Send</button>
+      </section>
+    </section>
+  </body>
+</html>

@@ -3,19 +3,19 @@ use std::fmt::Display;
 use crate::utils::serializable::Serializable;
 
 #[derive(Debug)]
-pub struct Transaction {
+pub struct RawTransaction {
   pub sender_address: Vec<u8>,
   pub recipient_address: Vec<u8>,
-  pub value: i64,
+  pub value: f64,
 }
 
-impl Transaction {
-  pub fn new(sender_address: Vec<u8>, recipient_address: Vec<u8>, value: i64) -> Self {
+impl RawTransaction {
+  pub fn new(sender_address: Vec<u8>, recipient_address: Vec<u8>, value: f64) -> Self {
     Self { sender_address, recipient_address, value }
   }
 }
 
-impl Serializable <Transaction> for Transaction {
+impl Serializable <RawTransaction> for RawTransaction {
   fn serialize(&self) -> Vec<u8> {
     let mut serialized = vec![];
 
@@ -34,7 +34,7 @@ impl Serializable <Transaction> for Transaction {
     serialized
   }
 
-  fn deserialize(bytes: Vec<u8>) -> Transaction {
+  fn deserialize(bytes: Vec<u8>) -> RawTransaction {
     let mut pos = 0;
 
     // sender address
@@ -57,13 +57,13 @@ impl Serializable <Transaction> for Transaction {
     let value_len = usize::from_be_bytes(bytes[pos..pos + 8].try_into().unwrap());
 
     pos += 8;
-    let value = i64::from_be_bytes(bytes[pos..pos + value_len].try_into().unwrap());
+    let value = f64::from_be_bytes(bytes[pos..pos + value_len].try_into().unwrap());
 
-    Transaction { sender_address, recipient_address, value }
+    RawTransaction { sender_address, recipient_address, value }
   }
 }
 
-impl Display for Transaction {
+impl Display for RawTransaction {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     write!(
       f,
